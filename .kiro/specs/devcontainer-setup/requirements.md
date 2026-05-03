@@ -1,4 +1,4 @@
-# Requirements Document
+|# Requirements Document
 
 > **Contexto de infraestructura**: Ver `infrastructure-context.md` para los requisitos del entorno DevContainer con Docker Compose (herramientas, extensiones IDE, puertos, volúmenes y documentación).
 

@@ -1,17 +1,11 @@
 FROM node:20-alpine
 
-# Install Angular CLI globally
-RUN npm install -g @angular/cli@17 --silent
-
-# Install curl for healthchecks
-RUN apk add --no-cache curl
+# Install Angular CLI globally and curl for healthchecks
+RUN apk add --no-cache curl \
+    && npm install -g @angular/cli@17 --silent
 
 # Create workspace directory
 WORKDIR /workspace/pos-frontend
-
-# Pre-install dependencies (optional — speeds up first start)
-# COPY package*.json ./
-# RUN npm install --silent
 
 EXPOSE 4200
 
