@@ -1,0 +1,63 @@
+{
+  "name": "POS Restaurant System",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "backend",
+  "workspaceFolder": "/workspace",
+  "forwardPorts": [8080, 5005, 4200, 5432],
+  "portsAttributes": {
+    "8080": {
+      "label": "Quarkus HTTP",
+      "onAutoForward": "notify"
+    },
+    "5005": {
+      "label": "Java Debug (JDWP)",
+      "onAutoForward": "silent"
+    },
+    "4200": {
+      "label": "Angular Dev Server",
+      "onAutoForward": "openBrowser"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
+    }
+  },
+  "postCreateCommand": "cd /workspace/pos-backend && mvn dependency:resolve -q && cd /workspace/pos-frontend && npm install --silent",
+  "postStartCommand": "cd /workspace/pos-backend && mvn quarkus:dev -Ddebug=5005 &",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "redhat.java",
+        "vscjava.vscode-java-debug",
+        "vscjava.vscode-maven",
+        "redhat.vscode-quarkus",
+        "redhat.vscode-apache-camel",
+        "Angular.ng-template",
+        "dbaeumer.vscode-eslint",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "humao.rest-client",
+        "ms-vscode.vscode-json"
+      ],
+      "settings": {
+        "java.configuration.runtimes": [
+          {
+            "name": "JavaSE-17",
+            "path": "/usr/lib/jvm/java-17-openjdk-amd64"
+          }
+        ],
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "installMaven": true,
+      "mavenVersion": "3.9"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  }
+}

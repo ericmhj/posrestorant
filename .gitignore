@@ -1,0 +1,37 @@
+# Environment secrets — never commit real credentials
+.env
+.devcontainer/.env
+
+# Java / Maven
+pos-backend/target/
+pos-backend/.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+
+# Node / Angular
+pos-frontend/node_modules/
+pos-frontend/dist/
+pos-frontend/.angular/
+pos-frontend/.sass-cache/
+pos-frontend/npm-debug.log*
+pos-frontend/yarn-error.log*
+
+# IDE
+.idea/
+*.iml
+*.iws
+.vscode/settings.json
+.classpath
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (generated at runtime)
+pos-backend/uploads/
