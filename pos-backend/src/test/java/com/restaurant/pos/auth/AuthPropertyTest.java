@@ -46,7 +46,7 @@ class AuthPropertyTest {
             if ("admin".equals(username) && "admin123".equals(password)) continue;
 
             BusinessException ex = assertThrows(BusinessException.class,
-                    () -> authService.login(username, password),
+                    () -> authService.login(new AuthLoginRequest(username, password), "127.0.0.1"),
                     "Should reject: username=" + username);
             assertEquals(401, ex.getHttpStatus(),
                     "Should return 401 for invalid credentials: " + username);

@@ -35,7 +35,7 @@ export interface MesaDTO {
           <div class="mesa-estado">{{ mesa.estado }}</div>
           <div *ngIf="mesa.estado === 'OCUPADA'" class="mesa-info">
             <span>{{ formatTime(mesa.tiempoAbierta) }}</span>
-            <span>${{ mesa.totalAcumulado | number:'1.2-2' }}</span>
+            <span>$ {{ mesa.totalAcumulado | number:'1.2-2' }}</span>
           </div>
         </div>
       </div>

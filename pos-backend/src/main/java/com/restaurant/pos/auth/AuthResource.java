@@ -22,7 +22,7 @@ public class AuthResource {
     @POST
     @Path("/login")
     public Response login(@Valid AuthLoginRequest request) {
-        AuthLoginResponse response = authService.login(request.username, request.password);
+        AuthLoginResponse response = authService.login(request, "unknown");
         return Response.ok(response).build();
     }
 
@@ -38,13 +38,8 @@ public class AuthResource {
 
     @PUT
     @Path("/password")
-    public Response changePassword(ChangePasswordRequest request) {
-        authService.changePassword(currentUser.getId(), request.currentPassword, request.newPassword);
+    public Response changePassword(@Valid ChangePasswordRequest request) {
+        authService.changePassword(currentUser.getId(), request);
         return Response.noContent().build();
-    }
-
-    public static class ChangePasswordRequest {
-        public String currentPassword;
-        public String newPassword;
     }
 }

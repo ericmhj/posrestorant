@@ -31,7 +31,9 @@ public class OrderRoutingRoute extends RouteBuilder {
         from("direct:routeOrderItem")
                 .routeId("order-routing-route")
                 .log(LoggingLevel.INFO, "Routing OrderItem: itemPedidoId=${header.itemPedidoId} estacion=${header.estacion}")
-                .validate(body().isNotNull())
+                .filter(body().isNull())
+                    .throwException(new IllegalArgumentException("Order message body cannot be null"))
+                .end()
                 .choice()
                     .when(header("estacion").isEqualTo("COCINA"))
                         .to("direct:kdsQueue")
@@ -48,7 +50,7 @@ public class OrderRoutingRoute extends RouteBuilder {
         // -------------------------------------------------------
         from("direct:kdsQueue")
                 .routeId("kds-notification-route")
-                .log(LoggingLevel.INFO, "Notifying KDS: mesa=${body.mesaNombre} producto=${body.productoNombre}")
+                .log(LoggingLevel.INFO, "Notifying KDS station")
                 .process(exchange -> {
                     OrderMessageDTO msg = exchange.getIn().getBody(OrderMessageDTO.class);
                     broadcastService.broadcastToKDS(msg);
@@ -60,7 +62,7 @@ public class OrderRoutingRoute extends RouteBuilder {
         // -------------------------------------------------------
         from("direct:bdsQueue")
                 .routeId("bds-notification-route")
-                .log(LoggingLevel.INFO, "Notifying BDS: mesa=${body.mesaNombre} producto=${body.productoNombre}")
+                .log(LoggingLevel.INFO, "Notifying BDS station")
                 .process(exchange -> {
                     OrderMessageDTO msg = exchange.getIn().getBody(OrderMessageDTO.class);
                     broadcastService.broadcastToBDS(msg);
@@ -72,14 +74,14 @@ public class OrderRoutingRoute extends RouteBuilder {
         // -------------------------------------------------------
         from("direct:deadLetter")
                 .routeId("dead-letter-route")
-                .log(LoggingLevel.ERROR, "Message failed after retries: ${body}")
-                .bean(deadLetterService, "persist");
+                .log(LoggingLevel.ERROR, "Message failed after retries")
+                .process(exchange -> deadLetterService.persist(exchange));
 
         // -------------------------------------------------------
         // Route 5: Metrics collector
         // -------------------------------------------------------
         from("direct:metricsCollector")
                 .routeId("metrics-route")
-                .log(LoggingLevel.DEBUG, "Metrics: route=${header.CamelToEndpoint}");
+                .log(LoggingLevel.DEBUG, "Metrics collected");
     }
 }

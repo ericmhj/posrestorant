@@ -16,20 +16,20 @@ import { environment } from '../../../environments/environment';
         <div *ngFor="let item of items" class="item-row">
           <span>{{ item.cantidad }}x {{ item.productoNombre }}</span>
           <span *ngIf="item.modificadores" class="mod">{{ item.modificadores }}</span>
-          <span class="precio">${{ (item.precioUnitario * item.cantidad) | number:'1.2-2' }}</span>
+          <span class="precio">$ {{ (item.precioUnitario * item.cantidad) | number:'1.2-2' }}</span>
         </div>
         <hr />
         <div class="total-row">
           <span>Subtotal:</span>
-          <span>${{ subtotal | number:'1.2-2' }}</span>
+          <span>$ {{ subtotal | number:'1.2-2' }}</span>
         </div>
         <div class="total-row">
           <span>IVA (16%):</span>
-          <span>${{ impuestos | number:'1.2-2' }}</span>
+          <span>$ {{ impuestos | number:'1.2-2' }}</span>
         </div>
         <div class="total-row total-final">
           <strong>Total:</strong>
-          <strong>${{ total | number:'1.2-2' }}</strong>
+          <strong>$ {{ total | number:'1.2-2' }}</strong>
         </div>
       </div>
 
@@ -46,7 +46,7 @@ import { environment } from '../../../environments/environment';
           <input type="number" [(ngModel)]="montoRecibido"
                  [min]="total" step="0.01" />
           <div *ngIf="montoRecibido >= total" class="cambio">
-            Cambio: ${{ (montoRecibido - total) | number:'1.2-2' }}
+            Cambio: $ {{ (montoRecibido - total) | number:'1.2-2' }}
           </div>
         </div>
 

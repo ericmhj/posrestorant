@@ -31,7 +31,9 @@ public class AuthService {
     int expirationHours;
 
     @Transactional
-    public AuthLoginResponse login(String username, String password) {
+    public AuthLoginResponse login(AuthLoginRequest request, String ipAddress) {
+        String username = request.username();
+        String password = request.password();
         Usuario usuario = Usuario.findByUsername(username)
                 .orElseThrow(() -> new BusinessException(401, "Credenciales inválidas"));
 
@@ -72,9 +74,15 @@ public class AuthService {
 
         return new AuthLoginResponse(
                 token,
-                new AuthLoginResponse.UsuarioInfo(usuario.id, usuario.nombre, usuario.rol.name()),
+                new AuthLoginResponse.UsuarioInfo(usuario.id, usuario.nombre, usuario.apellido, usuario.rol.name()),
                 expiresAt
         );
+    }
+
+    @Transactional
+    public void logout(String token) {
+        sessionStore.invalidate(token);
+        LOG.infof("User logged out via token");
     }
 
     @Transactional
@@ -88,15 +96,15 @@ public class AuthService {
     }
 
     @Transactional
-    public void changePassword(UUID userId, String currentPassword, String newPassword) {
+    public void changePassword(UUID userId, ChangePasswordRequest request) {
         Usuario usuario = Usuario.findById(userId)
                 .orElseThrow(() -> new BusinessException(404, "Usuario no encontrado"));
 
-        if (!passwordHasher.verify(currentPassword, usuario.passwordHash)) {
-            throw new BusinessException(400, "La contraseña actual es incorrecta");
+        if (!passwordHasher.verify(request.currentPassword(), usuario.passwordHash)) {
+            throw new com.restaurant.pos.common.ValidationException("currentPassword", "La contraseña actual es incorrecta");
         }
 
-        usuario.passwordHash = passwordHasher.hash(newPassword);
+        usuario.passwordHash = passwordHasher.hash(request.newPassword());
         LOG.infof("Password changed for userId=%s", userId);
     }
 

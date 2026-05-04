@@ -12,7 +12,7 @@ VALUES (
     'Administrador',
     'Sistema',
     'admin',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.iK8i',
+    '$2a$12$sJGdtHSt3uzfZ0TRv/jPXO/wOY6DxK2zqN35vnR9zHETilDZZLzXy',
     'ADMIN',
     true,
     0

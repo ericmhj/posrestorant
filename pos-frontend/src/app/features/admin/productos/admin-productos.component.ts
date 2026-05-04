@@ -37,7 +37,7 @@ import { ProductPlaceholderComponent } from '../../../shared/components/product-
           </app-product-placeholder>
           <div class="producto-info">
             <strong>{{ p.nombre }}</strong>
-            <span>${{ p.precio }}</span>
+            <span>$ {{ p.precio }}</span>
             <span class="badge" [class.activo]="p.activo">{{ p.activo ? 'Activo' : 'Inactivo' }}</span>
           </div>
           <div class="producto-actions">

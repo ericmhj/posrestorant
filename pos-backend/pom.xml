@@ -187,6 +187,9 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <jvmArgs>-Dquarkus.log.level=ERROR -Dquarkus.log.category."io.quarkus".level=WARN</jvmArgs>
+        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>

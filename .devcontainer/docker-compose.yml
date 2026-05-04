@@ -46,13 +46,13 @@ services:
       QUARKUS_DATASOURCE_JDBC_URL: ${QUARKUS_DATASOURCE_JDBC_URL:-jdbc:postgresql://db:5432/pos_db}
       QUARKUS_DATASOURCE_USERNAME: ${QUARKUS_DATASOURCE_USERNAME:-pos_user}
       QUARKUS_DATASOURCE_PASSWORD: ${QUARKUS_DATASOURCE_PASSWORD:-pos_password}
-      QUARKUS_LOG_LEVEL: ${QUARKUS_LOG_LEVEL:-DEBUG}
-      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+      QUARKUS_LOG_LEVEL: ${QUARKUS_LOG_LEVEL:-ERROR}
     ports:
       - "8080:8080"
       - "5005:5005"
     volumes:
       - ../pos-backend:/workspace/pos-backend
+      - ../pos-frontend:/workspace/pos-frontend
       - maven-cache:/root/.m2/repository
     networks:
       - pos-network

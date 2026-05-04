@@ -21,9 +21,9 @@ import { environment } from '../../../../environments/environment';
 
       <div *ngIf="ventasReporte" class="reporte-card">
         <h3>Reporte de Ventas</h3>
-        <p>Total: ${{ ventasReporte.totalVentas }}</p>
+        <p>Total: $ {{ ventasReporte.totalVentas }}</p>
         <p>Cuentas: {{ ventasReporte.numeroCuentas }}</p>
-        <p>Ticket Promedio: ${{ ventasReporte.ticketPromedio }}</p>
+        <p>Ticket Promedio: $ {{ ventasReporte.ticketPromedio }}</p>
       </div>
 
       <div *ngIf="productosReporte.length > 0" class="reporte-card">
@@ -34,7 +34,7 @@ import { environment } from '../../../../environments/environment';
             <tr *ngFor="let p of productosReporte">
               <td>{{ p.nombre }}</td>
               <td>{{ p.cantidadVendida }}</td>
-              <td>${{ p.ingresos }}</td>
+              <td>$ {{ p.ingresos }}</td>
               <td>{{ p.categoria }}</td>
             </tr>
           </tbody>

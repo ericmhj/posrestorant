@@ -146,7 +146,7 @@ public class InventarioService {
 
         ReservaInventario reserva = new ReservaInventario();
         reserva.itemInventario = item;
-        reserva.itemPedido = (ItemPedido) ItemPedido.findById(itemPedidoId).orElse(null);
+        reserva.itemPedido = (ItemPedido) ItemPedido.findByIdOptional(itemPedidoId).orElse(null);
         reserva.cantidad = cantidad;
         reserva.persist();
 

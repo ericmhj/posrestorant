@@ -22,8 +22,8 @@
       "onAutoForward": "silent"
     }
   },
-  "postCreateCommand": "cd /workspace/pos-backend && mvn dependency:resolve -q && cd /workspace/pos-frontend && npm install --silent",
-  "postStartCommand": "cd /workspace/pos-backend && mvn quarkus:dev -Ddebug=5005 &",
+  "postCreateCommand": "cd /workspace/pos-backend && mvn dependency:resolve -q",
+  "postStartCommand": "echo 'Container ready'",
   "customizations": {
     "vscode": {
       "extensions": [

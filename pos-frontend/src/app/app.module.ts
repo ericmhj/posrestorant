@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { AuthInterceptor } from './core/auth/auth.interceptor';
 import { GlobalErrorHandler } from './core/error/global-error-handler';
 import { ConnectionStatusBannerComponent } from './shared/components/connection-status-banner/connection-status-banner.component';
+import { NavMenuComponent } from './shared/components/nav-menu/nav-menu.component';
 
 @NgModule({
   declarations: [AppComponent],
@@ -13,7 +14,8 @@ import { ConnectionStatusBannerComponent } from './shared/components/connection-
     BrowserModule,
     HttpClientModule,
     AppRoutingModule,
-    ConnectionStatusBannerComponent
+    ConnectionStatusBannerComponent,
+    NavMenuComponent
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
