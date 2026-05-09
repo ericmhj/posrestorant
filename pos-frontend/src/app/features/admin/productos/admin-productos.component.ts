@@ -4,12 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { ProductPlaceholderComponent } from '../../../shared/components/product-placeholder';
+import { LoadingOverlayComponent } from '../../../shared/components/loading-overlay/loading-overlay.component';
 
 @Component({
   selector: 'app-admin-productos',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductPlaceholderComponent],
+  imports: [CommonModule, FormsModule, ProductPlaceholderComponent, LoadingOverlayComponent],
   template: `
+    <app-loading-overlay [visible]="loading"></app-loading-overlay>
     <div class="admin-container">
       <h2>Gestión de Productos</h2>
       <button (click)="toggleForm()" class="btn-primary">
@@ -150,6 +152,7 @@ export class AdminProductosComponent implements OnInit {
   showForm = false;
   editId: string | null = null;
   errorMsg = '';
+  loading = false;
   form = { nombre: '', descripcion: '', precio: 0, estacion: 'COCINA', categoriaId: '' };
 
   // Ingredientes
@@ -195,12 +198,13 @@ export class AdminProductosComponent implements OnInit {
 
   save(): void {
     this.errorMsg = '';
+    this.loading = true;
     const req = this.editId
       ? this.http.put(`${environment.apiUrl}/api/v1/productos/${this.editId}`, this.form)
       : this.http.post(`${environment.apiUrl}/api/v1/productos`, this.form);
     req.subscribe({
-      next: () => { this.showForm = false; this.editId = null; this.load(); },
-      error: (e) => { this.errorMsg = e?.error?.message || 'Error al guardar'; }
+      next: () => { this.loading = false; this.showForm = false; this.editId = null; this.load(); },
+      error: (e) => { this.loading = false; this.errorMsg = e?.error?.message || 'Error al guardar'; }
     });
   }
 
@@ -220,13 +224,21 @@ export class AdminProductosComponent implements OnInit {
     if (!file) return;
     const fd = new FormData();
     fd.append('imagen', file);
+    this.loading = true;
     this.http.post(`${environment.apiUrl}/api/v1/productos/${id}/imagen`, fd)
-      .subscribe(() => this.load());
+      .subscribe({
+        next: () => { this.loading = false; this.load(); },
+        error: () => { this.loading = false; }
+      });
   }
 
   deleteImage(id: string): void {
+    this.loading = true;
     this.http.delete(`${environment.apiUrl}/api/v1/productos/${id}/imagen`)
-      .subscribe(() => this.load());
+      .subscribe({
+        next: () => { this.loading = false; this.load(); },
+        error: () => { this.loading = false; }
+      });
   }
 
   // -------------------------------------------------------
@@ -243,7 +255,10 @@ export class AdminProductosComponent implements OnInit {
 
   loadIngredientes(productoId: string): void {
     this.http.get<any[]>(`${environment.apiUrl}/api/v1/productos/${productoId}/ingredientes`)
-      .subscribe(i => this.ingredientes = i);
+      .subscribe(i => {
+        this.ingredientes = i;
+        this.loading = false;
+      });
   }
 
   onItemsSelected(event: Event): void {
@@ -270,6 +285,7 @@ export class AdminProductosComponent implements OnInit {
       ).toPromise().catch(e => ({ error: e?.error?.message || 'Error' }))
     );
 
+    this.loading = true;
     Promise.all(requests).then(() => {
       this.selectedItemIds = [];
       this.ingForm = { itemInventarioId: '', cantidad: 1 };
@@ -277,7 +293,7 @@ export class AdminProductosComponent implements OnInit {
       if (this.multiSelectRef?.nativeElement) {
         Array.from(this.multiSelectRef.nativeElement.options).forEach(o => o.selected = false);
       }
-      this.loadIngredientes(this.selectedProducto.id);
+      this.loadIngredientes(this.selectedProducto.id); // loading=false se ejecuta dentro de loadIngredientes
     });
   }
 
