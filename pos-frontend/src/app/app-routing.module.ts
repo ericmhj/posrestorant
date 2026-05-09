@@ -17,6 +17,13 @@ const routes: Routes = [
     data: { roles: ['MESERO', 'ADMIN'] }
   },
   {
+    path: 'cuenta/:cuentaId',
+    loadComponent: () => import('./features/cuenta/cuenta.component')
+      .then(m => m.CuentaComponent),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['MESERO', 'ADMIN'] }
+  },
+  {
     path: 'kds',
     loadComponent: () => import('./features/kds/kds.component')
       .then(m => m.KdsComponent),

@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { WebSocketService } from '../../core/websocket/websocket.service';
@@ -58,7 +59,7 @@ export class PosComponent implements OnInit, OnDestroy {
   mesas: MesaDTO[] = [];
   private sub?: Subscription;
 
-  constructor(private http: HttpClient, private ws: WebSocketService) {}
+  constructor(private http: HttpClient, private ws: WebSocketService, private router: Router) {}
 
   ngOnInit(): void {
     this.loadMesas();
@@ -79,8 +80,18 @@ export class PosComponent implements OnInit, OnDestroy {
 
   onMesaClick(mesa: MesaDTO): void {
     if (mesa.estado === 'LIBRE') {
-      this.http.post(`${environment.apiUrl}/api/v1/mesas/${mesa.id}/abrir`, {})
-        .subscribe(() => this.loadMesas());
+      // Abrir mesa y navegar a la cuenta
+      this.http.post<any>(`${environment.apiUrl}/api/v1/mesas/${mesa.id}/abrir`, {})
+        .subscribe(cuenta => {
+          this.router.navigate(['/cuenta', cuenta.id], {
+            queryParams: { mesa: mesa.nombre }
+          });
+        });
+    } else if (mesa.estado === 'OCUPADA' && mesa.cuentaId) {
+      // Navegar directamente a la cuenta abierta
+      this.router.navigate(['/cuenta', mesa.cuentaId], {
+        queryParams: { mesa: mesa.nombre }
+      });
     }
   }
 

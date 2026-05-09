@@ -193,7 +193,7 @@ export class AdminProductosComponent implements OnInit {
 
   loadItemsInventario(): void {
     this.http.get<any[]>(`${environment.apiUrl}/api/v1/inventario`)
-      .subscribe(i => this.itemsInventario = i);
+      .subscribe(i => this.itemsInventario = i.sort((a, b) => a.nombre.localeCompare(b.nombre)));
   }
 
   save(): void {
@@ -256,7 +256,7 @@ export class AdminProductosComponent implements OnInit {
   loadIngredientes(productoId: string): void {
     this.http.get<any[]>(`${environment.apiUrl}/api/v1/productos/${productoId}/ingredientes`)
       .subscribe(i => {
-        this.ingredientes = i;
+        this.ingredientes = i.sort((a, b) => a.itemInventarioNombre.localeCompare(b.itemInventarioNombre));
         this.loading = false;
       });
   }
