@@ -17,5 +17,8 @@ public class CreateItemInventarioRequest {
     @DecimalMin(value = "0", message = "El stock mínimo no puede ser negativo")
     public BigDecimal stockMinimo = BigDecimal.ZERO;
 
+    @DecimalMin(value = "0", message = "El stock inicial no puede ser negativo")
+    public BigDecimal stockActual = BigDecimal.ZERO;
+
     public BigDecimal stockMaximo;
 }

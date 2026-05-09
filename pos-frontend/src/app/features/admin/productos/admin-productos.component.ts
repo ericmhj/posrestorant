@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -12,7 +12,7 @@ import { ProductPlaceholderComponent } from '../../../shared/components/product-
   template: `
     <div class="admin-container">
       <h2>Gestión de Productos</h2>
-      <button (click)="showForm = !showForm" class="btn-primary">
+      <button (click)="toggleForm()" class="btn-primary">
         {{ showForm ? 'Cancelar' : '+ Nuevo Producto' }}
       </button>
 
@@ -92,17 +92,22 @@ import { ProductPlaceholderComponent } from '../../../shared/components/product-
 
           <!-- Formulario agregar ingrediente -->
           <div class="add-ing-form">
-            <h4>Agregar ingrediente</h4>
-            <select [(ngModel)]="ingForm.itemInventarioId">
-              <option value="">-- Selecciona item --</option>
+            <h4>Agregar ingredientes</h4>
+            <small style="color:#666">Mantén <kbd>Ctrl</kbd> para seleccionar varios</small>
+            <select multiple size="6" (change)="onItemsSelected($event)" class="multi-select" #multiSelect>
               <option *ngFor="let item of itemsInventario" [value]="item.id">
                 {{ item.nombre }} ({{ item.unidadMedida }})
               </option>
             </select>
-            <input type="number" placeholder="Cantidad por unidad vendida"
-                   [(ngModel)]="ingForm.cantidad" step="0.001" min="0.001" />
+            <label style="font-size:.85rem;color:#555">
+              Cantidad por unidad vendida
+              <input type="number" [(ngModel)]="ingForm.cantidad" step="0.001" min="0.001" />
+            </label>
             <p *ngIf="ingErrorMsg" style="color:red;font-size:.85rem">{{ ingErrorMsg }}</p>
-            <button (click)="addIngrediente()" class="btn-primary">Agregar</button>
+            <button (click)="addIngredientes()" class="btn-primary"
+                    [disabled]="selectedItemIds.length === 0">
+              Agregar {{ selectedItemIds.length > 1 ? '(' + selectedItemIds.length + ' items)' : '' }}
+            </button>
           </div>
         </div>
       </div>
@@ -135,6 +140,7 @@ import { ProductPlaceholderComponent } from '../../../shared/components/product-
     .add-ing-form { display: flex; flex-direction: column; gap: .5rem; border-top: 1px solid #eee; padding-top: .75rem; }
     .add-ing-form h4 { margin: 0; font-size: .9rem; color: #555; }
     .empty-msg { color: #999; font-size: .85rem; text-align: center; padding: .5rem; }
+    .multi-select { height: 150px; width: 100%; }
   `]
 })
 export class AdminProductosComponent implements OnInit {
@@ -147,9 +153,11 @@ export class AdminProductosComponent implements OnInit {
   form = { nombre: '', descripcion: '', precio: 0, estacion: 'COCINA', categoriaId: '' };
 
   // Ingredientes
+  @ViewChild('multiSelect') multiSelectRef!: ElementRef<HTMLSelectElement>;
   selectedProducto: any = null;
   ingredientes: any[] = [];
-  ingForm = { itemInventarioId: '', cantidad: 0 };
+  selectedItemIds: string[] = [];
+  ingForm = { itemInventarioId: '', cantidad: 1 };
   ingErrorMsg = '';
 
   constructor(private http: HttpClient) {}
@@ -158,6 +166,16 @@ export class AdminProductosComponent implements OnInit {
     this.load();
     this.loadCategorias();
     this.loadItemsInventario();
+  }
+
+  toggleForm(): void {
+    this.showForm = !this.showForm;
+    if (this.showForm) {
+      // Siempre limpia al abrir para nuevo producto
+      this.editId = null;
+      this.errorMsg = '';
+      this.form = { nombre: '', descripcion: '', precio: 0, estacion: 'COCINA', categoriaId: '' };
+    }
   }
 
   load(): void {
@@ -217,7 +235,8 @@ export class AdminProductosComponent implements OnInit {
 
   openIngredientes(p: any): void {
     this.selectedProducto = p;
-    this.ingForm = { itemInventarioId: '', cantidad: 0 };
+    this.selectedItemIds = [];
+    this.ingForm = { itemInventarioId: '', cantidad: 1 };
     this.ingErrorMsg = '';
     this.loadIngredientes(p.id);
   }
@@ -227,25 +246,38 @@ export class AdminProductosComponent implements OnInit {
       .subscribe(i => this.ingredientes = i);
   }
 
-  addIngrediente(): void {
+  onItemsSelected(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.selectedItemIds = Array.from(select.selectedOptions).map(o => o.value);
+  }
+
+  addIngredientes(): void {
     this.ingErrorMsg = '';
-    if (!this.ingForm.itemInventarioId) {
-      this.ingErrorMsg = 'Selecciona un item de inventario';
+    if (this.selectedItemIds.length === 0) {
+      this.ingErrorMsg = 'Selecciona al menos un item';
       return;
     }
     if (!this.ingForm.cantidad || this.ingForm.cantidad <= 0) {
       this.ingErrorMsg = 'La cantidad debe ser mayor a 0';
       return;
     }
-    this.http.post(
-      `${environment.apiUrl}/api/v1/productos/${this.selectedProducto.id}/ingredientes`,
-      this.ingForm
-    ).subscribe({
-      next: () => {
-        this.ingForm = { itemInventarioId: '', cantidad: 0 };
-        this.loadIngredientes(this.selectedProducto.id);
-      },
-      error: (e) => { this.ingErrorMsg = e?.error?.message || 'Error al agregar'; }
+
+    // Enviar todos los seleccionados en secuencia
+    const requests = this.selectedItemIds.map(id =>
+      this.http.post(
+        `${environment.apiUrl}/api/v1/productos/${this.selectedProducto.id}/ingredientes`,
+        { itemInventarioId: id, cantidad: this.ingForm.cantidad }
+      ).toPromise().catch(e => ({ error: e?.error?.message || 'Error' }))
+    );
+
+    Promise.all(requests).then(() => {
+      this.selectedItemIds = [];
+      this.ingForm = { itemInventarioId: '', cantidad: 1 };
+      // Deseleccionar todos los items del select
+      if (this.multiSelectRef?.nativeElement) {
+        Array.from(this.multiSelectRef.nativeElement.options).forEach(o => o.selected = false);
+      }
+      this.loadIngredientes(this.selectedProducto.id);
     });
   }
 

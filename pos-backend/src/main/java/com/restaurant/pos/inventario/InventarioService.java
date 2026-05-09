@@ -39,11 +39,23 @@ public class InventarioService {
         ItemInventario item = new ItemInventario();
         item.nombre = request.nombre;
         item.unidadMedida = request.unidadMedida;
-        item.stockActual = BigDecimal.ZERO;
+        item.stockActual = request.stockActual != null ? request.stockActual : BigDecimal.ZERO;
         item.stockMinimo = request.stockMinimo != null ? request.stockMinimo : BigDecimal.ZERO;
         item.stockMaximo = request.stockMaximo;
         item.persist();
-        LOG.infof("ItemInventario created: nombre=%s", item.nombre);
+
+        // Si hay stock inicial, registra movimiento ENTRADA
+        if (item.stockActual.compareTo(BigDecimal.ZERO) > 0) {
+            MovimientoInventario mov = new MovimientoInventario();
+            mov.itemInventario = item;
+            mov.tipo = TipoMovimiento.ENTRADA;
+            mov.cantidad = item.stockActual;
+            mov.motivo = "Stock inicial";
+            mov.fechaHora = java.time.LocalDateTime.now();
+            mov.persist();
+        }
+
+        LOG.infof("ItemInventario created: nombre=%s stockActual=%s", item.nombre, item.stockActual);
         return ItemInventarioDTO.from(item, BigDecimal.ZERO);
     }
 

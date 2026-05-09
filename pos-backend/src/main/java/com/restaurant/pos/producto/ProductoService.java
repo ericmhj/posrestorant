@@ -111,6 +111,54 @@ public class ProductoService {
         return ProductoDTO.from(producto);
     }
 
+    // -------------------------------------------------------
+    // Ingredientes
+    // -------------------------------------------------------
+
+    public java.util.List<ProductoIngredienteDTO> getIngredientes(UUID productoId) {
+        findOrThrow(productoId);
+        return ProductoIngrediente.findByProductoId(productoId)
+                .stream()
+                .map(ProductoIngredienteDTO::from)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Transactional
+    public ProductoIngredienteDTO addIngrediente(UUID productoId, AddIngredienteRequest request) {
+        Producto producto = findOrThrow(productoId);
+        com.restaurant.pos.inventario.ItemInventario item =
+                com.restaurant.pos.inventario.ItemInventario.findByIdOptional(request.itemInventarioId)
+                        .map(i -> (com.restaurant.pos.inventario.ItemInventario) i)
+                        .orElseThrow(() -> new BusinessException(404,
+                                "Item de inventario no encontrado: " + request.itemInventarioId));
+
+        long exists = ProductoIngrediente.count(
+                "producto.id = ?1 AND itemInventario.id = ?2", productoId, request.itemInventarioId);
+        if (exists > 0) {
+            throw new BusinessException(409, "Este ingrediente ya está vinculado al producto");
+        }
+
+        ProductoIngrediente pi = new ProductoIngrediente();
+        pi.producto = producto;
+        pi.itemInventario = item;
+        pi.cantidad = request.cantidad;
+        pi.persist();
+
+        LOG.infof("Ingrediente added: producto=%s item=%s cantidad=%s",
+                producto.nombre, item.nombre, request.cantidad);
+        return ProductoIngredienteDTO.from(pi);
+    }
+
+    @Transactional
+    public void removeIngrediente(UUID productoId, UUID ingredienteId) {
+        findOrThrow(productoId);
+        ProductoIngrediente pi = ProductoIngrediente.findByIdOptional(ingredienteId)
+                .map(p -> (ProductoIngrediente) p)
+                .orElseThrow(() -> new BusinessException(404, "Ingrediente no encontrado: " + ingredienteId));
+        pi.delete();
+        LOG.infof("Ingrediente removed: id=%s", ingredienteId);
+    }
+
     private Producto findOrThrow(UUID id) {
         return Producto.findByIdOptional(id)
                 .map(p -> (Producto) p)

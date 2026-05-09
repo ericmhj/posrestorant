@@ -91,4 +91,33 @@ public class ProductoResource {
     public ProductoDTO deleteImagen(@PathParam("id") UUID id) {
         return productoService.deleteImagen(id);
     }
+
+    // -------------------------------------------------------
+    // Ingredientes
+    // -------------------------------------------------------
+
+    @GET
+    @Path("/{id}/ingredientes")
+    @RequiresRole({Rol.ADMIN})
+    public List<ProductoIngredienteDTO> getIngredientes(@PathParam("id") UUID id) {
+        return productoService.getIngredientes(id);
+    }
+
+    @POST
+    @Path("/{id}/ingredientes")
+    @RequiresRole(Rol.ADMIN)
+    public Response addIngrediente(@PathParam("id") UUID id,
+                                    @Valid AddIngredienteRequest request) {
+        ProductoIngredienteDTO dto = productoService.addIngrediente(id, request);
+        return Response.status(201).entity(dto).build();
+    }
+
+    @DELETE
+    @Path("/{id}/ingredientes/{ingredienteId}")
+    @RequiresRole(Rol.ADMIN)
+    public Response removeIngrediente(@PathParam("id") UUID id,
+                                       @PathParam("ingredienteId") UUID ingredienteId) {
+        productoService.removeIngrediente(id, ingredienteId);
+        return Response.noContent().build();
+    }
 }

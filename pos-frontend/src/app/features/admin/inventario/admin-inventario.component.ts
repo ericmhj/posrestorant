@@ -17,10 +17,10 @@ import { environment } from '../../../../environments/environment';
 
       <div *ngIf="showForm" class="form-card">
         <h3>Nuevo Item de Inventario</h3>
-        <input placeholder="Nombre" [(ngModel)]="newForm.nombre" />
-        <input placeholder="Unidad (kg, lt, pz...)" [(ngModel)]="newForm.unidadMedida" />
-        <input type="number" placeholder="Stock inicial" [(ngModel)]="newForm.stockActual" />
-        <input type="number" placeholder="Stock mínimo" [(ngModel)]="newForm.stockMinimo" />
+        <label>Nombre *<input placeholder="Ej: Pollo, Aceite, Harina" [(ngModel)]="newForm.nombre" /></label>
+        <label>Unidad de medida<input placeholder="Ej: kg, lt, pz, caja" [(ngModel)]="newForm.unidadMedida" /></label>
+        <label>Stock inicial (cantidad actual en almacén)<input type="number" [(ngModel)]="newForm.stockActual" min="0" step="0.001" /></label>
+        <label>Stock mínimo (alerta cuando baje de este valor)<input type="number" [(ngModel)]="newForm.stockMinimo" min="0" step="0.001" /></label>
         <p *ngIf="errorMsg" style="color:red;font-size:.85rem">{{ errorMsg }}</p>
         <button (click)="saveNew()" class="btn-primary">Guardar</button>
       </div>
@@ -67,6 +67,8 @@ import { environment } from '../../../../environments/environment';
     .btn-primary { padding: .5rem 1rem; background: #2980b9; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
     input, select { padding: .4rem; border: 1px solid #ccc; border-radius: 4px; }
     button { padding: .25rem .5rem; cursor: pointer; }
+    label { display: flex; flex-direction: column; gap: .2rem; font-size: .85rem; color: #555; font-weight: 500; }
+    label input, label select { font-weight: normal; }
   `]
 })
 export class AdminInventarioComponent implements OnInit {
