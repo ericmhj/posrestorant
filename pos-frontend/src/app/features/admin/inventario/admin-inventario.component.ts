@@ -11,6 +11,20 @@ import { environment } from '../../../../environments/environment';
   template: `
     <div class="admin-container">
       <h2>Control de Inventario</h2>
+      <button (click)="showForm = !showForm" class="btn-primary">
+        {{ showForm ? 'Cancelar' : '+ Nuevo Item' }}
+      </button>
+
+      <div *ngIf="showForm" class="form-card">
+        <h3>Nuevo Item de Inventario</h3>
+        <input placeholder="Nombre" [(ngModel)]="newForm.nombre" />
+        <input placeholder="Unidad (kg, lt, pz...)" [(ngModel)]="newForm.unidadMedida" />
+        <input type="number" placeholder="Stock inicial" [(ngModel)]="newForm.stockActual" />
+        <input type="number" placeholder="Stock mínimo" [(ngModel)]="newForm.stockMinimo" />
+        <p *ngIf="errorMsg" style="color:red;font-size:.85rem">{{ errorMsg }}</p>
+        <button (click)="saveNew()" class="btn-primary">Guardar</button>
+      </div>
+
       <table class="table">
         <thead>
           <tr><th>Nombre</th><th>Unidad</th><th>Stock</th><th>Mín</th><th>Disponible</th><th>Alerta</th><th>Acciones</th></tr>
@@ -58,6 +72,9 @@ import { environment } from '../../../../environments/environment';
 export class AdminInventarioComponent implements OnInit {
   items: any[] = [];
   selectedItem: any = null;
+  showForm = false;
+  errorMsg = '';
+  newForm = { nombre: '', unidadMedida: '', stockActual: 0, stockMinimo: 0 };
   movForm = { tipo: 'ENTRADA', cantidad: 0, motivo: '' };
 
   constructor(private http: HttpClient) {}
@@ -67,6 +84,19 @@ export class AdminInventarioComponent implements OnInit {
   load(): void {
     this.http.get<any[]>(`${environment.apiUrl}/api/v1/inventario`)
       .subscribe(i => this.items = i);
+  }
+
+  saveNew(): void {
+    this.errorMsg = '';
+    this.http.post(`${environment.apiUrl}/api/v1/inventario`, this.newForm)
+      .subscribe({
+        next: () => {
+          this.showForm = false;
+          this.newForm = { nombre: '', unidadMedida: '', stockActual: 0, stockMinimo: 0 };
+          this.load();
+        },
+        error: (e) => { this.errorMsg = e?.error?.message || 'Error al guardar'; }
+      });
   }
 
   openMovimiento(item: any): void {
