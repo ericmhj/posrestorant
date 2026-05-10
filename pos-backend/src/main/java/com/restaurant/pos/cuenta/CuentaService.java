@@ -127,6 +127,28 @@ public class CuentaService {
     }
 
     // -------------------------------------------------------
+    // Entregar item (mesero marca como entregado)
+    // -------------------------------------------------------
+
+    @Transactional
+    public void entregarItem(UUID cuentaId, UUID itemId, UUID meseroId) {
+        findCuentaOrThrow(cuentaId);
+        ItemPedido item = ItemPedido.findByIdOptional(itemId)
+                .map(i -> (ItemPedido) i)
+                .orElseThrow(() -> new BusinessException(404, "Item no encontrado: " + itemId));
+
+        if (item.estado != ItemPedidoEstado.LISTO) {
+            throw new BusinessException(409,
+                    "Solo se pueden entregar items en estado LISTO. Estado actual: " + item.estado);
+        }
+
+        item.estado = ItemPedidoEstado.ENTREGADO;
+        item.entregadoEn = java.time.LocalDateTime.now();
+
+        LOG.infof("Item entregado: itemId=%s cuentaId=%s", itemId, cuentaId);
+    }
+
+    // -------------------------------------------------------
     // Cobro
     // -------------------------------------------------------
 

@@ -56,4 +56,13 @@ public class CuentaResource {
         ComprobanteDTO comprobante = cuentaService.cobrar(id, request, currentUser.getId());
         return Response.ok(comprobante).build();
     }
+
+    @PUT
+    @Path("/{cuentaId}/items/{itemId}/entregar")
+    @RequiresRole({Rol.MESERO, Rol.ADMIN})
+    public Response entregarItem(@PathParam("cuentaId") UUID cuentaId,
+                                  @PathParam("itemId") UUID itemId) {
+        cuentaService.entregarItem(cuentaId, itemId, currentUser.getId());
+        return Response.noContent().build();
+    }
 }

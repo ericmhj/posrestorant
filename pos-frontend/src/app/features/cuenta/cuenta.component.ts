@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
+import { WebSocketService } from '../../core/websocket/websocket.service';
 
 @Component({
   selector: 'app-cuenta',
@@ -12,6 +14,11 @@ import { LoadingOverlayComponent } from '../../shared/components/loading-overlay
   imports: [CommonModule, FormsModule, LoadingOverlayComponent],
   template: `
     <app-loading-overlay [visible]="loading"></app-loading-overlay>
+
+    <!-- Toast notificación -->
+    <div *ngIf="toast" class="toast" [class.toast-listo]="toast.tipo === 'listo'">
+      🔔 {{ toast.mensaje }}
+    </div>
 
     <div class="cuenta-container">
       <div class="cuenta-header">
@@ -74,11 +81,16 @@ import { LoadingOverlayComponent } from '../../shared/components/loading-overlay
             <div class="ronda-header">Ronda {{ pedido.numeroRonda }}</div>
             <div *ngFor="let item of pedido.items" class="item-row">
               <span>{{ item.cantidad }}x {{ item.productoNombre }}</span>
-              <span class="item-estado" [class]="item.estado.toLowerCase()">{{ item.estado }}</span>
+              <span class="item-estado" [ngClass]="'estado-' + item.estado?.toLowerCase()">
+                {{ estadoLabel(item.estado) }}
+              </span>
               <span>$ {{ (item.precioUnitario * item.cantidad) | number:'1.2-2' }}</span>
               <button *ngIf="item.estado === 'PENDIENTE' && cuenta?.estado === 'ABIERTA'"
                       (click)="eliminarItem(pedido.id, item.id)"
                       class="btn-remove-item">✕</button>
+              <button *ngIf="item.estado === 'LISTO'"
+                      (click)="entregarItem(item.id)"
+                      class="btn-entregar">📦 Entregar</button>
             </div>
           </div>
 
@@ -150,11 +162,17 @@ import { LoadingOverlayComponent } from '../../shared/components/loading-overlay
     .ronda-header { font-weight: 600; font-size: .85rem; color: #666; margin-bottom: .3rem; }
     .item-row { display: flex; align-items: center; gap: .5rem; padding: .2rem 0; font-size: .85rem; }
     .item-row span:first-child { flex: 1; }
-    .item-estado { font-size: .75rem; padding: .1rem .4rem; border-radius: 8px; background: #eee; }
-    .item-estado.pendiente { background: #fef9e7; color: #d68910; }
-    .item-estado.preparando { background: #eaf4fb; color: #2980b9; }
-    .item-estado.listo { background: #d5f5e3; color: #27ae60; }
+    .item-estado { font-size: .75rem; padding: .1rem .4rem; border-radius: 8px; background: #eee; white-space: nowrap; }
+    .estado-pendiente { background: #fef9e7; color: #d68910; }
+    .estado-preparando { background: #eaf4fb; color: #2980b9; }
+    .estado-listo { background: #d5f5e3; color: #27ae60; font-weight: 600; }
+    .estado-entregado { background: #f0f0f0; color: #888; }
     .btn-remove-item { background: none; border: none; cursor: pointer; color: #e74c3c; font-size: .9rem; }
+    .btn-entregar { background: #27ae60; color: #fff; border: none; border-radius: 4px; cursor: pointer; padding: .2rem .5rem; font-size: .8rem; }
+    /* Toast */
+    .toast { position: fixed; top: 1rem; right: 1rem; background: #2c3e50; color: #fff; padding: .75rem 1.25rem; border-radius: 8px; z-index: 10000; font-size: .95rem; box-shadow: 0 4px 12px rgba(0,0,0,.2); animation: slideIn .3s ease; }
+    .toast-listo { background: #27ae60; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     .totales { border-top: 1px solid #ddd; padding-top: .5rem; margin-top: .5rem; }
     .total-row { display: flex; justify-content: space-between; padding: .2rem 0; font-size: .9rem; }
     .total-final { font-size: 1rem; margin-top: .3rem; }
@@ -171,7 +189,7 @@ import { LoadingOverlayComponent } from '../../shared/components/loading-overlay
     label { font-size: .85rem; display: flex; flex-direction: column; gap: .3rem; }
   `]
 })
-export class CuentaComponent implements OnInit {
+export class CuentaComponent implements OnInit, OnDestroy {
   cuentaId = '';
   mesaNombre = '';
   cuenta: any = null;
@@ -185,11 +203,15 @@ export class CuentaComponent implements OnInit {
   montoRecibido = 0;
   cobroError = '';
   comprobante: any = null;
+  toast: { mensaje: string; tipo: string } | null = null;
+  private wsSub?: Subscription;
+  private toastTimer?: any;
 
   constructor(
     private http: HttpClient,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private ws: WebSocketService
   ) {}
 
   ngOnInit(): void {
@@ -198,6 +220,44 @@ export class CuentaComponent implements OnInit {
     this.loadCuenta();
     this.loadCategorias();
     this.loadProductos();
+
+    // Suscribir WebSocket para actualizaciones en tiempo real
+    this.ws.connect();
+    this.wsSub = this.ws.events$.subscribe(event => {
+      if (event.tipo === 'ITEM_ESTADO_CAMBIADO' && event.payload?.cuentaId === this.cuentaId) {
+        this.loadCuenta();
+        if (event.payload?.nuevoEstado === 'LISTO') {
+          this.mostrarToast(`${event.payload?.productoNombre || 'Un platillo'} está LISTO`, 'listo');
+        } else if (event.payload?.nuevoEstado === 'PREPARANDO') {
+          this.mostrarToast(`${event.payload?.productoNombre || 'Un platillo'} está siendo preparado`, 'info');
+        }
+      }
+      if (event.tipo === 'PEDIDO_COMPLETO' && event.payload?.cuentaId === this.cuentaId) {
+        this.mostrarToast('✅ Todos los platillos están listos', 'listo');
+        this.loadCuenta();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.wsSub?.unsubscribe();
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+  }
+
+  mostrarToast(mensaje: string, tipo: string): void {
+    this.toast = { mensaje, tipo };
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.toast = null, 4000);
+  }
+
+  estadoLabel(estado: string): string {
+    const labels: Record<string, string> = {
+      'PENDIENTE': '⏳ Pendiente',
+      'PREPARANDO': '🔥 Preparando',
+      'LISTO': '✅ Listo',
+      'ENTREGADO': '📦 Entregado'
+    };
+    return labels[estado] || estado;
   }
 
   loadCuenta(): void {
@@ -259,6 +319,15 @@ export class CuentaComponent implements OnInit {
   eliminarItem(pedidoId: string, itemId: string): void {
     this.loading = true;
     this.http.delete(`${environment.apiUrl}/api/v1/cuentas/${this.cuentaId}/pedidos/${pedidoId}/items/${itemId}`)
+      .subscribe({
+        next: () => { this.loading = false; this.loadCuenta(); },
+        error: () => { this.loading = false; }
+      });
+  }
+
+  entregarItem(itemId: string): void {
+    this.loading = true;
+    this.http.put(`${environment.apiUrl}/api/v1/cuentas/${this.cuentaId}/items/${itemId}/entregar`, {})
       .subscribe({
         next: () => { this.loading = false; this.loadCuenta(); },
         error: () => { this.loading = false; }

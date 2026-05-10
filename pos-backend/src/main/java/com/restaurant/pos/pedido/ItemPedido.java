@@ -49,6 +49,9 @@ public class ItemPedido extends PanacheEntityBase {
     @Column(name = "listo_en")
     public LocalDateTime listoEn;
 
+    @Column(name = "entregado_en")
+    public LocalDateTime entregadoEn;
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {
