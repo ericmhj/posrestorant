@@ -12,9 +12,11 @@ public class ItemInventarioDTO {
     public BigDecimal stockActual;
     public BigDecimal stockMinimo;
     public BigDecimal stockMaximo;
-    public BigDecimal stockDisponible; // stockActual - reservas activas
+    public BigDecimal stockDisponible;
     public Boolean alertaMinimo;
     public LocalDateTime updatedAt;
+    public UUID categoriaId;
+    public String categoriaNombre;
 
     public static ItemInventarioDTO from(ItemInventario item, BigDecimal reservado) {
         ItemInventarioDTO dto = new ItemInventarioDTO();
@@ -27,6 +29,10 @@ public class ItemInventarioDTO {
         dto.stockDisponible = item.stockActual.subtract(reservado != null ? reservado : BigDecimal.ZERO);
         dto.alertaMinimo = item.stockActual.compareTo(item.stockMinimo) < 0;
         dto.updatedAt = item.updatedAt;
+        if (item.categoria != null) {
+            dto.categoriaId = item.categoria.id;
+            dto.categoriaNombre = item.categoria.nombre;
+        }
         return dto;
     }
 }

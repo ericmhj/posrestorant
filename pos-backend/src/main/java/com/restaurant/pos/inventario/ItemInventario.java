@@ -1,5 +1,6 @@
 package com.restaurant.pos.inventario;
 
+import com.restaurant.pos.producto.Categoria;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 
@@ -31,6 +32,10 @@ public class ItemInventario extends PanacheEntityBase {
 
     @Column(name = "stock_maximo", precision = 10, scale = 3)
     public BigDecimal stockMaximo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "categoria_id")
+    public Categoria categoria;
 
     @Column(name = "updated_at")
     public LocalDateTime updatedAt;

@@ -42,6 +42,13 @@ public class InventarioService {
         item.stockActual = request.stockActual != null ? request.stockActual : BigDecimal.ZERO;
         item.stockMinimo = request.stockMinimo != null ? request.stockMinimo : BigDecimal.ZERO;
         item.stockMaximo = request.stockMaximo;
+
+        if (request.categoriaId != null) {
+            item.categoria = com.restaurant.pos.producto.Categoria.findByIdOptional(request.categoriaId)
+                    .map(c -> (com.restaurant.pos.producto.Categoria) c)
+                    .orElse(null);
+        }
+
         item.persist();
 
         // Si hay stock inicial, registra movimiento ENTRADA
