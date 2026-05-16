@@ -1,0 +1,1 @@
+- [Esperar confirmación antes de cambios](feedback_confirmation.md) — Pedir aprobación antes de modificar código

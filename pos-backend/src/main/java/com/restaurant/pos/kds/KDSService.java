@@ -68,7 +68,8 @@ public class KDSService {
         boolean valid = switch (current) {
             case PENDIENTE -> next == ItemPedidoEstado.PREPARANDO;
             case PREPARANDO -> next == ItemPedidoEstado.LISTO;
-            case LISTO -> false;
+            case LISTO -> next == ItemPedidoEstado.ENTREGADO;
+            case ENTREGADO -> false;
         };
         if (!valid) {
             throw new BusinessException(409,
