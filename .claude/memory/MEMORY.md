@@ -1,1 +1,3 @@
 - [Esperar confirmación antes de cambios](feedback_confirmation.md) — Pedir aprobación antes de modificar código
+- [Plan Reportes Granulares](PLAN_REPORTES.md) — Plan de trabajo 5 fases sincronización backend-frontend
+- [Listado Cambios Reportes](LISTADO_CAMBIOS_DETALLADO.md) — Detalle exacto de cambios por funcionalidad

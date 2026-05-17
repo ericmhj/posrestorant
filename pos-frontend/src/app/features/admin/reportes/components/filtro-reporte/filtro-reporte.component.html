@@ -1,0 +1,68 @@
+<div class="filtro-container">
+  <div class="filtro-header">
+    <h3>🔍 Filtros de Reporte</h3>
+  </div>
+
+  <!-- Presets rápidos -->
+  <div class="presets">
+    <button *ngFor="let preset of presets"
+            (click)="aplicarPreset(preset.valor)"
+            class="preset-btn"
+            [class.active]="false">
+      {{ preset.label }}
+    </button>
+  </div>
+
+  <!-- Formulario de filtros -->
+  <div class="filtro-form">
+    <!-- Rango de fechas -->
+    <div class="form-group">
+      <label>Desde:</label>
+      <input type="datetime-local"
+             [value]="fechaDesdeFormato"
+             (change)="fechaDesdeFormato = $any($event.target).value"
+             class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label>Hasta:</label>
+      <input type="datetime-local"
+             [value]="fechaHastaFormato"
+             (change)="fechaHastaFormato = $any($event.target).value"
+             class="form-control">
+    </div>
+
+    <!-- Turno -->
+    <div class="form-group">
+      <label>Turno:</label>
+      <select [(ngModel)]="filtro.turno" class="form-control">
+        <option *ngFor="let turno of turnos" [value]="turno.value">
+          {{ turno.label }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Mesero -->
+    <div class="form-group">
+      <label>Mesero:</label>
+      <select [(ngModel)]="filtro.usuarioId" class="form-control">
+        <option value="">Todos los meseros</option>
+        <option *ngFor="let mesero of meseros" [value]="mesero.id">
+          {{ mesero.nombre }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="filtro-actions">
+      <button (click)="aplicarFiltros()"
+              [disabled]="cargando"
+              class="btn btn-primary">
+        {{ cargando ? '⏳ Cargando...' : '✓ Aplicar' }}
+      </button>
+      <button (click)="limpiarFiltros()" class="btn btn-secondary">
+        ✕ Limpiar
+      </button>
+    </div>
+  </div>
+</div>

@@ -4,6 +4,7 @@ import com.restaurant.pos.cuenta.Cuenta;
 import com.restaurant.pos.cuenta.CuentaEstado;
 import com.restaurant.pos.mesa.Mesa;
 import com.restaurant.pos.mesa.MesaEstado;
+import com.restaurant.pos.reporte.ReporteFiltro;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -82,7 +83,8 @@ class ReporteTotalesPropertyTest {
         }
 
         try {
-            ReporteVentasDTO reporte = reporteService.getReporteVentas(desde, hasta);
+            ReporteVentasDTO reporte = reporteService.getReporteVentas(
+                    new ReporteFiltro(desde, hasta, null, null, null, null));
 
             // Total must equal sum of all closed cuentas in period
             assertTrue(reporte.totalVentas.compareTo(expectedTotal) >= 0,
@@ -103,7 +105,8 @@ class ReporteTotalesPropertyTest {
         LocalDateTime desde = LocalDateTime.now().plusYears(10);
         LocalDateTime hasta = LocalDateTime.now().plusYears(11);
 
-        ReporteVentasDTO reporte = reporteService.getReporteVentas(desde, hasta);
+        ReporteVentasDTO reporte = reporteService.getReporteVentas(
+                new ReporteFiltro(desde, hasta, null, null, null, null));
 
         assertEquals(BigDecimal.ZERO, reporte.totalVentas,
                 "Empty period must return zero total");

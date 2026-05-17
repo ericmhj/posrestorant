@@ -23,16 +23,26 @@ public class ReporteResource {
     @Path("/ventas")
     public ReporteVentasDTO getVentas(
             @QueryParam("desde") String desde,
-            @QueryParam("hasta") String hasta) {
-        return reporteService.getReporteVentas(parseDate(desde), parseDate(hasta));
+            @QueryParam("hasta") String hasta,
+            @QueryParam("turno") String turno,
+            @QueryParam("meseroId") String meseroId,
+            @QueryParam("estacion") String estacion,
+            @QueryParam("categoriaId") String categoriaId) {
+        ReporteFiltro filtro = new ReporteFiltro(parseDate(desde), parseDate(hasta), turno, meseroId, estacion, categoriaId);
+        return reporteService.getReporteVentas(filtro);
     }
 
     @GET
     @Path("/productos")
     public List<ReporteProductoItemDTO> getProductos(
             @QueryParam("desde") String desde,
-            @QueryParam("hasta") String hasta) {
-        return reporteService.getReporteProductos(parseDate(desde), parseDate(hasta));
+            @QueryParam("hasta") String hasta,
+            @QueryParam("turno") String turno,
+            @QueryParam("meseroId") String meseroId,
+            @QueryParam("estacion") String estacion,
+            @QueryParam("categoriaId") String categoriaId) {
+        ReporteFiltro filtro = new ReporteFiltro(parseDate(desde), parseDate(hasta), turno, meseroId, estacion, categoriaId);
+        return reporteService.getReporteProductos(filtro);
     }
 
     @GET
@@ -41,6 +51,59 @@ public class ReporteResource {
             @QueryParam("desde") String desde,
             @QueryParam("hasta") String hasta) {
         return reporteService.getReporteInventario(parseDate(desde), parseDate(hasta));
+    }
+
+    @GET
+    @Path("/meseros")
+    public List<ReporteMeseroItemDTO> getMeseros(
+            @QueryParam("desde") String desde,
+            @QueryParam("hasta") String hasta,
+            @QueryParam("turno") String turno,
+            @QueryParam("meseroId") String meseroId) {
+        ReporteFiltro filtro = new ReporteFiltro(parseDate(desde), parseDate(hasta), turno, meseroId, null, null);
+        return reporteService.getReporteMeseros(filtro);
+    }
+
+    @GET
+    @Path("/horas-pico")
+    public List<ReporteHoraPicoItemDTO> getHorasPico(
+            @QueryParam("desde") String desde,
+            @QueryParam("hasta") String hasta,
+            @QueryParam("turno") String turno,
+            @QueryParam("estacion") String estacion) {
+        ReporteFiltro filtro = new ReporteFiltro(parseDate(desde), parseDate(hasta), turno, null, estacion, null);
+        return reporteService.getReporteHorasPico(filtro);
+    }
+
+    @GET
+    @Path("/rentabilidad")
+    public List<ReporteRentabilidadItemDTO> getRentabilidad(
+            @QueryParam("desde") String desde,
+            @QueryParam("hasta") String hasta,
+            @QueryParam("estacion") String estacion,
+            @QueryParam("categoriaId") String categoriaId) {
+        ReporteFiltro filtro = new ReporteFiltro(parseDate(desde), parseDate(hasta), null, null, estacion, categoriaId);
+        return reporteService.getReporteRentabilidad(filtro);
+    }
+
+    @GET
+    @Path("/estaciones")
+    public List<ReporteEstacionItemDTO> getEstaciones(
+            @QueryParam("desde") String desde,
+            @QueryParam("hasta") String hasta,
+            @QueryParam("estacion") String estacion) {
+        ReporteFiltro filtro = new ReporteFiltro(parseDate(desde), parseDate(hasta), null, null, estacion, null);
+        return reporteService.getReporteEstaciones(filtro);
+    }
+
+    @GET
+    @Path("/inventario-detallado")
+    public List<ReporteInventarioItemDTO> getInventarioDetallado(
+            @QueryParam("desde") String desde,
+            @QueryParam("hasta") String hasta,
+            @QueryParam("categoriaId") String categoriaId) {
+        ReporteFiltro filtro = new ReporteFiltro(parseDate(desde), parseDate(hasta), null, null, null, categoriaId);
+        return reporteService.getReporteInventarioDetallado(filtro);
     }
 
     @GET

@@ -37,6 +37,9 @@ public class ItemInventario extends PanacheEntityBase {
     @JoinColumn(name = "categoria_id")
     public Categoria categoria;
 
+    @Column(name = "costo_unitario", precision = 10, scale = 2)
+    public BigDecimal costoUnitario = BigDecimal.ZERO;
+
     @Column(name = "updated_at")
     public LocalDateTime updatedAt;
 

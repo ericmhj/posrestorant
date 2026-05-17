@@ -1,84 +1,138 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
+import { FiltroReporteComponent } from './shared/filtro-reporte.component';
+import { VentasGeneralComponent } from './ventas/ventas-general.component';
+import { VentasMeseroComponent } from './ventas/ventas-mesero.component';
+import { ProductosVendidosComponent } from './productos/productos-vendidos.component';
+import { ProductosRentabilidadComponent } from './productos/productos-rentabilidad.component';
+import { HorasPicoComponent } from './operacion/horas-pico.component';
+import { EstacionesComponent } from './operacion/estaciones.component';
+import { InventarioDetalladoComponent } from './inventario/inventario-detallado.component';
+import { ExportarReporteComponent } from './shared/exportar-reporte.component';
+import { ReporteFiltro } from './shared/reporte.service';
+import { LoadingOverlayComponent } from '../../../shared/components/loading-overlay/loading-overlay.component';
 
 @Component({
   selector: 'app-admin-reportes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    LoadingOverlayComponent,
+    FiltroReporteComponent,
+    VentasGeneralComponent,
+    VentasMeseroComponent,
+    ProductosVendidosComponent,
+    ProductosRentabilidadComponent,
+    HorasPicoComponent,
+    EstacionesComponent,
+    InventarioDetalladoComponent,
+    ExportarReporteComponent
+  ],
   template: `
-    <div class="admin-container">
-      <h2>Reportes</h2>
-      <div class="filters">
-        <label>Desde: <input type="datetime-local" [(ngModel)]="desde" /></label>
-        <label>Hasta: <input type="datetime-local" [(ngModel)]="hasta" /></label>
-        <button (click)="loadVentas()" class="btn-primary">Ventas</button>
-        <button (click)="loadProductos()" class="btn-primary">Productos</button>
-        <button (click)="exportVentas()">Exportar Ventas CSV</button>
+    <app-loading-overlay [visible]="loading"></app-loading-overlay>
+    <div class="reportes-container">
+      <h2>📊 Reportes</h2>
+
+      <app-filtro-reporte (onFilter)="aplicarFiltro($event)"></app-filtro-reporte>
+
+      <!-- Tabs -->
+      <div class="tabs" *ngIf="filtroActivo">
+        <button *ngFor="let tab of tabs"
+                (click)="tabActivo = tab.id"
+                [class.active]="tabActivo === tab.id"
+                class="tab-btn">
+          {{ tab.icono }} {{ tab.nombre }}
+        </button>
+        <button (click)="exportar()" class="btn-export">📥 Exportar CSV</button>
+        <app-exportar-reporte *ngIf="filtroActivo" [tipo]="tabActivo" [filtro]="filtroActivo"></app-exportar-reporte>
       </div>
 
-      <div *ngIf="ventasReporte" class="reporte-card">
-        <h3>Reporte de Ventas</h3>
-        <p>Total: $ {{ ventasReporte.totalVentas }}</p>
-        <p>Cuentas: {{ ventasReporte.numeroCuentas }}</p>
-        <p>Ticket Promedio: $ {{ ventasReporte.ticketPromedio }}</p>
+      <!-- Contenido del tab activo -->
+      <div *ngIf="filtroActivo" class="tab-content">
+        <app-ventas-general
+          *ngIf="tabActivo === 'ventas'"
+          [filtro]="filtroActivo">
+        </app-ventas-general>
+
+        <app-productos-vendidos
+          *ngIf="tabActivo === 'productos'"
+          [filtro]="filtroActivo">
+        </app-productos-vendidos>
+
+        <app-ventas-mesero
+          *ngIf="tabActivo === 'meseros'"
+          [filtro]="filtroActivo">
+        </app-ventas-mesero>
+
+        <app-horas-pico
+          *ngIf="tabActivo === 'horas-pico'"
+          [filtro]="filtroActivo">
+        </app-horas-pico>
+
+        <app-productos-rentabilidad
+          *ngIf="tabActivo === 'rentabilidad'"
+          [filtro]="filtroActivo">
+        </app-productos-rentabilidad>
+
+        <app-estaciones
+          *ngIf="tabActivo === 'estaciones'"
+          [filtro]="filtroActivo">
+        </app-estaciones>
+
+        <app-inventario-detallado
+          *ngIf="tabActivo === 'inventario'"
+          [filtro]="filtroActivo">
+        </app-inventario-detallado>
       </div>
 
-      <div *ngIf="productosReporte.length > 0" class="reporte-card">
-        <h3>Productos más vendidos</h3>
-        <table class="table">
-          <thead><tr><th>Producto</th><th>Cantidad</th><th>Ingresos</th><th>Categoría</th></tr></thead>
-          <tbody>
-            <tr *ngFor="let p of productosReporte">
-              <td>{{ p.nombre }}</td>
-              <td>{{ p.cantidadVendida }}</td>
-              <td>$ {{ p.ingresos }}</td>
-              <td>{{ p.categoria }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Placeholder -->
+      <div *ngIf="!filtroActivo" class="placeholder">
+        Selecciona un período y haz clic en <strong>🔍 Aplicar</strong> para ver los reportes.
       </div>
     </div>
   `,
   styles: [`
-    .admin-container { padding: 1rem; }
-    .filters { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
-    .reporte-card { background: #f9f9f9; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-    .table { width: 100%; border-collapse: collapse; }
-    .table th, .table td { padding: .5rem; border: 1px solid #ddd; }
-    .btn-primary { padding: .5rem 1rem; background: #2980b9; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-    button { padding: .5rem 1rem; cursor: pointer; }
-    input { padding: .4rem; border: 1px solid #ccc; border-radius: 4px; }
+    .reportes-container { padding: 1rem; max-width: 1000px; }
+    .tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+    .tab-btn { padding: .4rem .9rem; border: 1px solid #ccc; border-radius: 8px; background: #fff; cursor: pointer; font-size: .9rem; }
+    .tab-btn.active { background: #2980b9; color: #fff; border-color: #2980b9; }
+    .btn-export { margin-left: auto; padding: .4rem .9rem; background: #27ae60; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: .9rem; }
+    .tab-content { margin-top: .5rem; }
+    .placeholder { text-align: center; color: #999; padding: 3rem; background: #f8f9fa; border-radius: 8px; border: 2px dashed #e0e0e0; }
   `]
 })
-export class AdminReportesComponent implements OnInit {
-  desde = '';
-  hasta = '';
-  ventasReporte: any = null;
-  productosReporte: any[] = [];
+export class AdminReportesComponent {
+  filtroActivo: ReporteFiltro | null = null;
+  tabActivo = 'ventas';
+  loading = false;
 
-  constructor(private http: HttpClient) {}
+  tabs = [
+    { id: 'ventas', nombre: 'Ventas', icono: '💰' },
+    { id: 'productos', nombre: 'Productos', icono: '🍔' },
+    { id: 'rentabilidad', nombre: 'Rentabilidad', icono: '📈' },
+    { id: 'meseros', nombre: 'Meseros', icono: '👤' },
+    { id: 'horas-pico', nombre: 'Horas Pico', icono: '⏰' },
+    { id: 'estaciones', nombre: 'Estaciones', icono: '🍳' },
+    { id: 'inventario', nombre: 'Inventario', icono: '📦' }
+  ];
 
-  ngOnInit(): void {
-    const now = new Date();
-    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    this.desde = monthAgo.toISOString().slice(0, 16);
-    this.hasta = now.toISOString().slice(0, 16);
+  aplicarFiltro(filtro: ReporteFiltro): void {
+    this.filtroActivo = { ...filtro };
   }
 
-  loadVentas(): void {
-    this.http.get<any>(`${environment.apiUrl}/api/v1/reportes/ventas?desde=${this.desde}&hasta=${this.hasta}`)
-      .subscribe(r => this.ventasReporte = r);
-  }
+  exportar(): void {
+    if (!this.filtroActivo) return;
+    const token = sessionStorage.getItem('pos_token');
+    const params = new URLSearchParams({
+      desde: this.filtroActivo.desde,
+      hasta: this.filtroActivo.hasta
+    });
+    if (this.filtroActivo.turno) params.set('turno', this.filtroActivo.turno);
+    if (this.filtroActivo.meseroId) params.set('meseroId', this.filtroActivo.meseroId);
+    if (this.filtroActivo.estacion) params.set('estacion', this.filtroActivo.estacion);
+    if (this.filtroActivo.categoriaId) params.set('categoriaId', this.filtroActivo.categoriaId);
+    if (token) params.set('token', token);
 
-  loadProductos(): void {
-    this.http.get<any[]>(`${environment.apiUrl}/api/v1/reportes/productos?desde=${this.desde}&hasta=${this.hasta}`)
-      .subscribe(r => this.productosReporte = r);
-  }
-
-  exportVentas(): void {
-    window.open(`${environment.apiUrl}/api/v1/reportes/ventas/export?desde=${this.desde}&hasta=${this.hasta}`);
+    window.open(`/api/v1/reportes/${this.tabActivo}/export?${params.toString()}`);
   }
 }
